@@ -12,8 +12,8 @@ This project automates the creation of a secure and scalable AWS infrastructure 
 ## Requirements
 - [Terraform](https://www.terraform.io/downloads.html) ~> 1.9.0
 - [Terraform AWS Provider Plugin](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) ~> 5.60.0
-
-The Terraform state file is stored in an S3 bucket with DynamoDB for state locking. Ensure to update the values for the S3 bucket and DynamoDB table. If a remote backend is not required, delete `backend.tf`.
+- The Terraform state file is stored in an S3 bucket with DynamoDB for state locking.
+- Ensure to update the values for the S3 bucket and DynamoDB table. If a remote backend is not required, delete `backend.tf`.
 
 ## Inputs
 | Name | Description | Type | Default | Required |
@@ -57,22 +57,22 @@ The default values assume a production environment with two availability zones i
 
 2. **Plan the deployment**:
    ```bash
-terraform plan
+    terraform plan
     ```
 
 3. **Apply the configuration**:
    ```bash
-terraform apply
+    terraform apply
     ```
 
 4. **Destroy the infrastructure**:
    ```bash
-terraform destroy
+    terraform destroy
     ```
 
 5. **Backend Configuration**:
    ```bash
-If using a remote backend, ensure that the S3 bucket and DynamoDB table are properly configured in the backend.tf file. If not required, delete backend.tf.
+    If using a remote backend, ensure that the S3 bucket and DynamoDB table are properly configured in the backend.tf file. If not required, delete backend.tf.
     ```
 
 
