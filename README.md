@@ -1,74 +1,121 @@
-# AWS Infrastructure Provisioning with Terraform
+# AWS VPC Infrastructure with Terraform
 
-This Terraform project provisions a fully-configured AWS Virtual Private Cloud (VPC) with public and private subnets, NAT gateways, and route tables.
+A robust Terraform project for provisioning a fully configured AWS VPC with public and private subnets, NAT gateways, internet gateway, and properly configured routing.
 
-## Overview
-This project automates the creation of a secure and scalable AWS infrastructure with the following features:
-- Multi-AZ VPC with public and private subnets
-- Internet gateway for public subnets
-- NAT gateway for private subnets
-- Customizable subnet CIDR blocks and availability zones
+## Architecture
+
+This project creates:
+
+- Multi-availability zone VPC
+- Public and private subnets across AZs
+- Internet Gateway for public internet access
+- NAT Gateways for private subnet outbound connectivity
+- Route tables with appropriate routes
+
+## Features
+
+- **Multi-Environment Support**: Configure for both production (multi-AZ) and staging (single-AZ)
+- **Remote State Management**: S3 backend with DynamoDB locking
+- **Proper Resource Tagging**: All resources tagged with environment and name
+- **Flexible CIDR Configuration**: Easily customize subnet addressing
 
 ## Requirements
-- [Terraform](https://www.terraform.io/downloads.html) ~> 1.9.0
-- [Terraform AWS Provider Plugin](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) ~> 5.60.0
-- The Terraform state file is stored in an S3 bucket with DynamoDB for state locking.
-- Ensure to update the values for the S3 bucket and DynamoDB table. If a remote backend is not required, delete `backend.tf`.
+
+- Terraform ~> 1.9.0
+- AWS Provider ~> 5.60.0
+- AWS CLI configured with appropriate permissions
+- S3 bucket and DynamoDB table for state management (optional)
+
+## Module Structure
+
+```
+.
+├── backend.tf              # S3 backend configuration
+├── main.tf                 # Root module calling the VPC module
+├── modules/
+│   └── vpc/                # VPC module
+│       ├── main.tf         # VPC resources definition
+│       ├── variables.tf    # Module input variables
+│       └── outputs.tf      # Module outputs
+├── outputs.tf              # Root module outputs
+├── providers.tf            # Provider configuration
+├── terraform.tfvars        # Variable values
+└── variables.tf            # Root module variables
+```
 
 ## Inputs
+
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| region | AWS region to create the VPC | string | ap-south-1 | yes |
-| environment | Deployment environment (production/staging) | string | production | yes |
-| vpc_cidr | IPv4 CIDR block for the VPC | string | 10.0.0.0/16 | yes |
-| vpc_name | Name of the VPC | string | production-vpc | yes |
-| availability_zones | List of availability zones | list(string) | ["ap-south-1a", "ap-south-1b"] | yes |
-| public_subnet_cidrs | CIDR blocks for public subnets | list(string) | ["10.0.2.0/24", "10.0.4.0/24"] | yes |
-| private_subnet_cidrs | CIDR blocks for private subnets | list(string) | ["10.0.1.0/24", "10.0.3.0/24"] | yes |
+|------|-------------|------|---------|:--------:|
+| region | AWS region for deployment | string | `"ap-south-1"` | yes |
+| environment | Deployment environment (production/staging) | string | `"production"` | yes |
+| vpc_cidr | IPv4 CIDR block for the VPC | string | `"10.0.0.0/16"` | yes |
+| vpc_name | Name of the VPC | string | `"production-vpc"` | yes |
+| availability_zones | List of availability zones | list(string) | `["ap-south-1a", "ap-south-1b"]` | yes |
+| public_subnet_cidrs | CIDR blocks for public subnets | list(string) | `["10.0.2.0/24", "10.0.4.0/24"]` | yes |
+| private_subnet_cidrs | CIDR blocks for private subnets | list(string) | `["10.0.1.0/24", "10.0.3.0/24"]` | yes |
 
-## Default Values
-The default values assume a production environment with two availability zones in the `ap-south-1` region.
+## Environment Configuration
 
-## Resources Created
-| Resource |
-|----------|
-| VPC |
-| Internet Gateway |
-| Elastic IPs for NAT Gateways |
-| NAT Gateways |
-| Public Subnets |
-| Private Subnets |
-| Routes |
-| Route Tables |
-| Route Table Associations |
+The infrastructure automatically adapts based on the environment:
+
+- **Production**: Deploys across multiple availability zones (default: 2)
+- **Staging**: Deploys to a single availability zone to reduce costs
 
 ## Outputs
+
 | Name | Description |
 |------|-------------|
 | vpc_id | ID of the created VPC |
-| public_subnet_ids | List of Public Subnet IDs |
-| private_subnet_ids | List of Private Subnet IDs |
+| public_subnet_ids | List of public subnet IDs |
+| private_subnet_ids | List of private subnet IDs |
+| nat_gateway_ids | List of NAT gateway IDs |
+| internet_gateway_id | ID of the internet gateway |
 
 ## Usage
-1. **Initialize Terraform**:
-   ```bash
-   terraform init
-    ```
 
-2. **Plan the deployment**:
-   ```bash
-    terraform plan
-    ```
+### Backend Configuration
 
-3. **Apply the configuration**:
-   ```bash
-    terraform apply
-    ```
+If using a remote backend, ensure your S3 bucket and DynamoDB table exist:
 
-4. **Destroy the infrastructure**:
-   ```bash
-    terraform destroy
-    ```
+```bash
+# Update the bucket and table name in backend.tf
+# Remove backend.tf if you prefer local state management
+```
 
-5. **Backend Configuration**:
-- If using a remote backend, ensure that the S3 bucket and DynamoDB table are properly configured in the backend.tf file. If not required, delete backend.tf.
+### Deployment
+
+```bash
+# Initialize Terraform
+terraform init
+
+# Plan changes
+terraform plan
+
+# Apply infrastructure
+terraform apply
+
+# Destroy when finished
+terraform destroy
+```
+
+### Custom Configuration
+
+Modify `terraform.tfvars` for your environment:
+
+```hcl
+region               = "us-west-2"
+environment          = "production"
+vpc_cidr             = "10.0.0.0/16"
+vpc_name             = "my-vpc"
+availability_zones   = ["us-west-2a", "us-west-2b"]
+public_subnet_cidrs  = ["10.0.101.0/24", "10.0.102.0/24"]
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+```
+
+## Best Practices
+
+- Use environment-specific workspaces or separate state files
+- Review and approve changes through pull requests
+- Apply proper IAM permissions for Terraform execution
+- Tag all resources for cost allocation and management
