@@ -8,6 +8,11 @@ variable "vpc_name" {
   description = "Name of the VPC"
 }
 
+variable "environment" {
+  type        = string
+  description = "Deployment environment (production/staging)"
+}
+
 variable "availability_zones" {
   type        = list(string)
   description = "List of availability zones"
